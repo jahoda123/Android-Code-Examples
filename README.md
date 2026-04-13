@@ -1,4 +1,4 @@
-# 📱 Jetpack Compose – Programmier Cheatsheet
+# 📱 Jetpack Compose – Programmier Cheatsheet (Navigation 3)
 
 ---
 
@@ -58,18 +58,33 @@ Button(onClick = { vm.increment() }) {
 
 ---
 
+# 🧭 Navigation 3 – Screen Definition
+
+```kotlin
+sealed class Screen {
+
+    data object Home : Screen()
+
+    data class Detail(val name: String) : Screen()
+}
+```
+
+---
+
 # 🧭 Navigation Setup
 
 ```kotlin
 val nav = rememberNavController()
 
-NavHost(navController = nav, startDestination = "home") {
+NavHost(navController = nav, startDestination = Screen.Home) {
 
-    composable("home") { HomeScreen(nav) }
+    composable<Screen.Home> {
+        HomeScreen(nav)
+    }
 
-    composable("detail/{name}") { backStack ->
-        val name = backStack.arguments?.getString("name") ?: ""
-        DetailScreen(name, nav)
+    composable<Screen.Detail> { entry ->
+        val args = entry.toRoute<Screen.Detail>()
+        DetailScreen(args.name, nav)
     }
 }
 ```
@@ -79,7 +94,7 @@ NavHost(navController = nav, startDestination = "home") {
 # ➡️ Navigate mit Parameter
 
 ```kotlin
-nav.navigate("detail/$name")
+nav.navigate(Screen.Detail(name))
 ```
 
 ---
@@ -107,7 +122,7 @@ fun HomeScreen(nav: NavController, vm: MyViewModel = viewModel()) {
         )
 
         Button(onClick = {
-            nav.navigate("detail/${state.name}")
+            nav.navigate(Screen.Detail(state.name))
         }) {
             Text("Next")
         }
@@ -152,10 +167,12 @@ Column(
 
 # ⚠️ WICHTIG (Prüfung)
 
+- KEINE Strings mehr für Navigation
+- IMMER `sealed class Screen`
+- IMMER `composable<Screen.X>`
+- IMMER `toRoute<>()` für Argumente
 - IMMER `collectAsState()`
 - IMMER `.copy()` beim State ändern
-- ViewModel nur 1x erstellen
-- Parameter IMMER im Route String definieren
 
 ---
 
@@ -163,8 +180,14 @@ Column(
 
 1. State erstellen  
 2. ViewModel machen  
-3. UI mit `collectAsState()`  
-4. Navigation bauen  
-5. Events → ViewModel  
+3. Screens (sealed class)  
+4. NavHost mit `composable<>()`  
+5. Navigation mit `Screen.X(...)`  
+6. UI mit `collectAsState()`  
 
 ---
+
+# 💯 Merksatz
+
+👉 Navigation 2 = Strings  
+👉 Navigation 3 = Klassen
