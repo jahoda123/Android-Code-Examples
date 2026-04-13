@@ -187,7 +187,112 @@ Column(
 
 ---
 
-# 💯 Merksatz
+# 🚀 Ablauf – Jetpack Compose Projekt (Navigation 3)
 
-👉 Navigation 2 = Strings  
-👉 Navigation 3 = Klassen
+## 🧩 1. MODEL erstellen
+```kotlin
+data class MyState(
+    val name: String = "",
+    val count: Int = 0
+)
+```
+
+---
+
+## 🧠 2. VIEWMODEL erstellen
+```kotlin
+class MyViewModel : ViewModel() {
+
+    private val _state = MutableStateFlow(MyState())
+    val state = _state.asStateFlow()
+
+    fun updateName(n: String) {
+        _state.update { it.copy(name = n) }
+    }
+}
+```
+
+---
+
+## 🧭 3. NAVIGATION (WICHTIG!)
+
+```kotlin
+@Serializable
+sealed class Screen {
+    @Serializable data object Home : Screen()
+    @Serializable data class Detail(val name: String) : Screen()
+}
+```
+
+---
+
+## 🚀 4. NavHost bauen
+
+```kotlin
+val nav = rememberNavController()
+val vm: MyViewModel = viewModel()
+
+NavHost(navController = nav, startDestination = Screen.Home) {
+
+    composable<Screen.Home> {
+        HomeScreen(vm) {
+            nav.navigate(Screen.Detail(it))
+        }
+    }
+
+    composable<Screen.Detail> { entry ->
+        val args = entry.toRoute<Screen.Detail>()
+        DetailScreen(args.name, nav)
+    }
+}
+```
+
+---
+
+## 🏠 5. HOME SCREEN
+
+```kotlin
+val state by vm.state.collectAsState()
+
+TextField(
+    value = state.name,
+    onValueChange = { vm.updateName(it) }
+)
+
+Button(onClick = {
+    nav.navigate(Screen.Detail(state.name))
+})
+```
+
+---
+
+## 📄 6. DETAIL SCREEN
+
+```kotlin
+val args = entry.toRoute<Screen.Detail>()
+
+Text("Hello ${args.name}")
+
+Button(onClick = { nav.popBackStack() })
+```
+
+---
+
+# 🔁 MERK ABLAUF
+
+1. Model  
+2. ViewModel  
+3. Screen (sealed class)  
+4. NavHost  
+5. Screens bauen  
+6. Navigation + State verbinden  
+
+---
+
+# 💯 5 GOLDENE REGELN
+
+- IMMER `@Serializable`
+- KEINE Strings für Navigation
+- IMMER `toRoute<>()`
+- IMMER `.copy()` für State
+- IMMER `collectAsState()`
